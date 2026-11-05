@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Junk Food Awareness Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" async></script>
+<style>
+  :root{
+    --green:#4CAF50; --green-dark:#2E6B31; --green-ink:#16240F;
+    --orange:#FF9800; --orange-dark:#D97C00;
+    --red:#E15B41; --cream:#FBFBF3; --mint:#EAF6E7; --white:#fff;
+    --sidebar-w:230px; --header-h:64px; --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:'Work Sans',sans-serif; color:var(--green-ink); background:var(--mint);}
+  h1,h2,h3,h4,.display{font-family:'Fredoka',sans-serif; margin:0;}
+  p{margin:0;}
+  button{font-family:inherit; cursor:pointer;}
+  .eyebrow{text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; font-weight:600; color:var(--green-dark);}
+  .plate-logo{width:36px;height:36px;border-radius:50%;background:conic-gradient(var(--green) 0deg 180deg, var(--orange) 180deg 360deg); box-shadow:0 0 0 3px var(--white), 0 0 0 4px rgba(22,36,15,.08); flex:none;}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:999px; font-weight:600; font-size:.9rem; border:2px solid transparent; transition:transform .15s;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--green); color:var(--white); box-shadow:0 8px 18px -8px rgba(46,107,49,.6);}
+  .btn-ghost{background:var(--white); color:var(--green-dark); border-color:var(--green);}
+  .btn-outline{background:transparent; color:var(--green-dark); border-color:rgba(22,36,15,.15);}
+  .btn-sm{padding:7px 14px; font-size:.78rem;}
+
+  /* ---------------- LOGIN ---------------- */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    background:
+      radial-gradient(circle at 85% 15%, rgba(255,152,0,.18), transparent 55%),
+      radial-gradient(circle at 10% 85%, rgba(76,175,80,.2), transparent 50%),
+      var(--cream);
+  }
+  .login-card{
+    width:100%; max-width:380px; background:var(--white); border-radius:22px; padding:38px 34px;
+    box-shadow:0 24px 60px -24px rgba(22,36,15,.35); text-align:center;
+  }
+  .login-card .plate-logo{width:56px;height:56px; margin:0 auto 14px;}
+  .login-card h1{font-size:1.3rem; font-weight:600; line-height:1.3;}
+  .login-card .sub{font-size:.82rem; color:#5a6a54; margin-top:6px;}
+  .field{text-align:left; margin-top:18px;}
+  .field label{display:block; font-size:.78rem; font-weight:600; margin-bottom:6px; color:var(--green-dark);}
+  .field input{
+    width:100%; padding:11px 14px; border-radius:10px; border:2px solid rgba(22,36,15,.12);
+    font-size:.95rem; font-family:inherit;
+  }
+  .field input:focus{outline:none; border-color:var(--green);}
+  #loginScreen .btn-primary{width:100%; justify-content:center; margin-top:22px; padding:12px;}
+  .forgot{display:inline-block; margin-top:14px; font-size:.8rem; color:var(--orange-dark); text-decoration:underline; cursor:pointer; background:none; border:none;}
+  .login-hint{margin-top:16px; font-size:.74rem; color:#8a9a84; background:var(--mint); padding:8px 12px; border-radius:8px;}
+  .login-error{display:none; margin-top:14px; font-size:.8rem; color:var(--red); font-weight:600;}
+
+  /* ---------------- APP SHELL ---------------- */
+  #appScreen{display:none; min-height:100vh;}
+  header.topbar{
+    position:fixed; top:0; left:0; right:0; height:var(--header-h); z-index:40;
+    background:var(--white); border-bottom:1px solid rgba(22,36,15,.08);
+    display:flex; align-items:center; justify-content:space-between; padding:0 24px;
+  }
+  .topbar-left{display:flex; align-items:center; gap:12px; font-family:'Fredoka',sans-serif; font-weight:600;}
+  .topbar-left .titlewrap{line-height:1.15;}
+  .topbar-left .titlewrap small{display:block; font-family:'Work Sans',sans-serif; font-weight:500; font-size:.68rem; color:#7a8a74; text-transform:uppercase; letter-spacing:.08em;}
+  .topbar-right{display:flex; align-items:center; gap:14px; font-size:.9rem;}
+  .avatar-sm{width:34px;height:34px;border-radius:50%; background:var(--green); color:var(--white); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.85rem;}
+
+  .sidebar{
+    position:fixed; top:var(--header-h); left:0; bottom:0; width:var(--sidebar-w);
+    background:var(--green-ink); padding:22px 14px; z-index:30; overflow-y:auto;
+  }
+  .sidebar button{
+    display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none; border:none;
+    color:#c7d6c2; font-size:.92rem; font-weight:500; padding:11px 14px; border-radius:10px; margin-bottom:4px;
+    border-left:3px solid transparent;
+  }
+  .sidebar button:hover{background:rgba(255,255,255,.06);}
+  .sidebar button.active{background:rgba(255,152,0,.14); color:var(--white); border-left-color:var(--orange);}
+  .sidebar .icon{font-size:1.05rem;}
+  .sidebar .logout-btn{margin-top:18px; border-top:1px solid rgba(255,255,255,.1); padding-top:16px; color:#ffb199;}
+
+  main.content{margin-left:var(--sidebar-w); margin-top:var(--header-h); padding:32px; min-height:calc(100vh - var(--header-h));}
+  .page{display:none;}
+  .page.active{display:block;}
+  .page-head{margin-bottom:26px;}
+  .page-head h2{font-size:1.5rem; font-weight:600;}
+  .page-head p{color:#5a6a54; font-size:.92rem; margin-top:4px;}
+
+  @media (max-width:900px){
+    .sidebar{transform:translateX(-100%); transition:transform .2s; box-shadow:0 0 0 2000px rgba(0,0,0,0);}
+    .sidebar.open{transform:translateX(0);}
+    main.content{margin-left:0;}
+    .menu-toggle{display:inline-flex !important;}
+  }
+  .menu-toggle{display:none; background:none; border:none; font-size:1.3rem; color:var(--green-ink); margin-right:6px;}
+
+  /* ---------------- DASHBOARD CARDS ---------------- */
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px;}
+  @media (max-width:1100px){.stat-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.stat-grid{grid-template-columns:1fr;}}
+  .stat-card{background:var(--white); border-radius:var(--radius); padding:20px; box-shadow:0 6px 18px -14px rgba(22,36,15,.3);}
+  .stat-card .top{display:flex; align-items:center; justify-content:space-between;}
+  .stat-card .emoji{font-size:1.5rem;}
+  .stat-card .num{font-family:'Fredoka',sans-serif; font-size:1.7rem; font-weight:600; margin-top:8px;}
+  .stat-card .label{font-size:.8rem; color:#5a6a54; margin-top:2px;}
+
+  .chart-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px;}
+  @media (max-width:900px){.chart-grid{grid-template-columns:1fr;}}
+  .chart-card{background:var(--white); border-radius:var(--radius); padding:22px; box-shadow:0 6px 18px -14px rgba(22,36,15,.3);}
+  .chart-card h4{font-size:.95rem; font-weight:600; margin-bottom:14px;}
+  .chart-card canvas{max-height:260px;}
+
+  .recent-card{background:var(--white); border-radius:var(--radius); padding:22px; box-shadow:0 6px 18px -14px rgba(22,36,15,.3);}
+  .recent-card h4{font-size:.95rem; font-weight:600; margin-bottom:14px;}
+  .recent-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(22,36,15,.06); font-size:.88rem;}
+  .recent-row:last-child{border-bottom:none;}
+  .badge{font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:.04em;}
+  .badge.completed{background:rgba(76,175,80,.15); color:var(--green-dark);}
+  .badge.pending{background:rgba(255,152,0,.15); color:var(--orange-dark);}
+
+  /* ---------------- PROFILE ---------------- */
+  .profile-wrap{display:grid; grid-template-columns:220px 1fr; gap:28px; background:var(--white); border-radius:var(--radius); padding:30px; box-shadow:0 6px 18px -14px rgba(22,36,15,.3);}
+  @media (max-width:700px){.profile-wrap{grid-template-columns:1fr; text-align:center;}}
+  .profile-photo{width:140px;height:140px;border-radius:50%; background:var(--green); color:var(--white); display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; font-size:2.6rem; font-weight:600; margin:0 auto 14px;}
+  .profile-fields{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:520px){.profile-fields{grid-template-columns:1fr;}}
+  .pf-item label{display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; font-weight:600; color:var(--green-dark); margin-bottom:5px;}
+  .pf-item input{width:100%; padding:9px 12px; border-radius:8px; border:2px solid rgba(22,36,15,.1); font-family:inherit; font-size:.92rem; background:var(--mint); color:var(--green-ink);}
+  .pf-item input:disabled{background:var(--mint); color:var(--green-ink); opacity:.85;}
+  .pf-item input:not(:disabled){background:var(--white); border-color:var(--green);}
+
+  /* ---------------- ACTIVITIES ---------------- */
+  .filter-row{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+  .filter-btn{padding:7px 16px; border-radius:999px; border:2px solid rgba(22,36,15,.12); background:var(--white); font-size:.82rem; font-weight:600;}
+  .filter-btn.active{background:var(--green); color:var(--white); border-color:var(--green);}
+  table.act-table{width:100%; border-collapse:collapse; background:var(--white); border-radius:var(--radius); overflow:hidden; box-shadow:0 6px 18px -14px rgba(22,36,15,.3);}
+  table.act-table th{text-align:left; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:#5a6a54; padding:14px 18px; background:var(--mint);}
+  table.act-table td{padding:14px 18px; font-size:.9rem; border-top:1px solid rgba(22,36,15,.06);}
+
+  /* ---------------- PROGRAMS ---------------- */
+  .program-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  @media (max-width:1000px){.program-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:640px){.program-grid{grid-template-columns:1fr;}}
+  .program-card{background:var(--white); border-radius:var(--radius); overflow:hidden; box-shadow:0 6px 18px -14px rgba(22,36,15,.3); display:flex; flex-direction:column;}
+  .program-img{height:120px; display:flex; align-items:center; justify-content:center; font-size:2.6rem;}
+  .program-body{padding:18px; display:flex; flex-direction:column; gap:8px; flex:1;}
+  .program-body h4{font-size:1rem; font-weight:600;}
+  .program-body .desc{font-size:.84rem; color:#5a6a54;}
+  .program-meta{display:flex; flex-wrap:wrap; gap:8px; font-size:.74rem; color:#5a6a54; margin-top:auto;}
+  .program-meta span{background:var(--mint); padding:3px 9px; border-radius:999px;}
+  .program-body .btn{margin-top:10px; align-self:flex-start;}
+
+  /* ---------------- REPORTS ---------------- */
+  .report-actions{display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap;}
+
+  /* ---------------- MODAL ---------------- */
+  .modal-overlay{display:none; position:fixed; inset:0; background:rgba(22,36,15,.5); z-index:100; align-items:center; justify-content:center; padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--white); border-radius:18px; max-width:480px; width:100%; padding:28px; position:relative;}
+  .modal-close{position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:#5a6a54;}
+  .modal-box .program-img{border-radius:12px; margin-bottom:14px;}
+
+  footer.appfoot{margin-left:var(--sidebar-w); padding:18px 32px; font-size:.74rem; color:#8a9a84;}
+  @media (max-width:900px){footer.appfoot{margin-left:0;}}
+
+  @media print{
+    header.topbar, .sidebar, .report-actions, footer.appfoot{display:none !important;}
+    main.content{margin:0; padding:0;}
+    .page{display:none !important;}
+    #page-reports.active{display:block !important;}
+  }
+
+  .add-form{display:grid; grid-template-columns:2fr 1.5fr 1fr auto; gap:10px; background:var(--white); padding:16px; border-radius:var(--radius); margin-bottom:16px; box-shadow:0 6px 18px -14px rgba(22,36,15,.3);}
+  .add-form input,.add-form select{padding:9px 12px; border-radius:8px; border:2px solid rgba(22,36,15,.12); font-family:inherit; font-size:.88rem; min-width:0;}
+  @media (max-width:900px){.add-form{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.add-form{grid-template-columns:1fr;}}
+  .row-btn{background:none; border:none; font-size:.78rem; font-weight:600; color:var(--green-dark); text-decoration:underline; padding:2px 6px;}
+  .row-btn.del{color:var(--red);}
+  .toast{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--green-ink); color:var(--white); padding:10px 20px; border-radius:999px; font-size:.85rem; z-index:200; display:none;}
+  .toast.error{background:var(--red);}
+  .empty{padding:18px; color:#8a9a84; font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="plate-logo"></div>
+    <h1>Junk Food Awareness<br>Management System</h1>
+    <p class="sub">Community Service Program Portal</p>
+    <div id="loginForm">
+      <div class="field"><label for="username">Username</label><input type="text" id="username" autocomplete="username"></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" autocomplete="current-password"></div>
+      <button type="button" id="loginBtn" class="btn btn-primary">Login →</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+    <button class="forgot" id="forgotBtn">Forgot Password?</button>
+    <div class="login-hint" id="loginHint">Demo: admin / admin123 &nbsp;·&nbsp; volunteer / volunteer123</div>
+  </div>
+</div>
+
+<div id="appScreen">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle">&#9776;</button>
+      <div class="plate-logo"></div>
+      <div class="titlewrap">Junk Food Awareness<br><small>Management System</small></div>
+    </div>
+    <div class="topbar-right"><span id="welcomeMsg"></span><div class="avatar-sm" id="avatarInitial"></div></div>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <button class="nav-item active" data-page="dashboard"><span class="icon">🏠</span> Dashboard</button>
+    <button class="nav-item" data-page="profile"><span class="icon">👤</span> Profile</button>
+    <button class="nav-item" data-page="activities"><span class="icon">📅</span> Activities</button>
+    <button class="nav-item" data-page="programs"><span class="icon">📚</span> Awareness Programs</button>
+    <button class="nav-item" data-page="reports"><span class="icon">📊</span> Reports</button>
+    <button class="logout-btn" id="logoutBtn"><span class="icon">🔐</span> Logout</button>
+  </nav>
+
+  <main class="content">
+
+    <section class="page active" id="page-dashboard">
+      <div class="page-head"><h2>Dashboard</h2><p>Live overview from the database.</p></div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="top"><span class="label">Awareness Programs</span><span class="emoji">📚</span></div><div class="num" id="st-programs">–</div><div class="label">Total conducted</div></div>
+        <div class="stat-card"><div class="top"><span class="label">Volunteers</span><span class="emoji">🙋</span></div><div class="num" id="st-volunteers">–</div><div class="label">Total volunteers</div></div>
+        <div class="stat-card"><div class="top"><span class="label">Participants</span><span class="emoji">👥</span></div><div class="num" id="st-participants">–</div><div class="label">Total reached</div></div>
+        <div class="stat-card"><div class="top"><span class="label">Locations</span><span class="emoji">🏫</span></div><div class="num" id="st-locations">–</div><div class="label">Schools / communities visited</div></div>
+        <div class="stat-card"><div class="top"><span class="label">Awareness Score</span><span class="emoji">🎯</span></div><div class="num" id="st-awareness">–</div><div class="label">Average after programs</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h4>Healthy Food vs Junk Food Awareness</h4><canvas id="chartPie"></canvas></div>
+        <div class="chart-card"><h4>Participants by Program</h4><canvas id="chartBar"></canvas></div>
+      </div>
+      <div class="recent-card"><h4>Recent Activities</h4><div id="recentList"></div></div>
+    </section>
+
+    <section class="page" id="page-profile">
+      <div class="page-head"><h2>Profile</h2><p>Your details for this Community Service Program.</p></div>
+      <div class="profile-wrap">
+        <div>
+          <div class="profile-photo" id="profileInitial">?</div>
+          <button class="btn btn-outline btn-sm" id="editProfileBtn" style="width:100%; justify-content:center;">Edit Profile</button>
+        </div>
+        <div class="profile-fields">
+          <div class="pf-item"><label>Name</label><input id="pf-name" disabled></div>
+          <div class="pf-item"><label>Roll Number</label><input id="pf-roll_no" disabled></div>
+          <div class="pf-item"><label>Branch</label><input id="pf-branch" disabled></div>
+          <div class="pf-item"><label>College</label><input id="pf-college" disabled></div>
+          <div class="pf-item"><label>Mobile Number</label><input id="pf-phone" disabled></div>
+          <div class="pf-item"><label>Email</label><input id="pf-email" disabled></div>
+          <div class="pf-item" style="grid-column:1/-1;"><label>Community Service Batch</label><input id="pf-batch" disabled></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-activities">
+      <div class="page-head"><h2>Activities</h2><p>Log of awareness activities carried out under this program.</p></div>
+      <div class="add-form" id="addActivityForm" style="display:none;">
+        <input id="act-name" placeholder="Activity (e.g. Poster Campaign)">
+        <input id="act-location" placeholder="Location">
+        <input id="act-date" type="date">
+        <button class="btn btn-primary btn-sm" id="addActivityBtn" type="button">+ Add</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+      </div>
+      <table class="act-table">
+        <thead><tr><th>Date</th><th>Activity</th><th>Location</th><th>Status</th><th class="admin-col" style="display:none;"></th></tr></thead>
+        <tbody id="activityTable"></tbody>
+      </table>
+    </section>
+
+    <section class="page" id="page-programs">
+      <div class="page-head"><h2>Awareness Programs</h2><p>Programs designed and run as part of this CSP initiative.</p></div>
+      <div class="program-grid" id="programGrid"></div>
+    </section>
+
+    <section class="page" id="page-reports">
+      <div class="page-head"><h2>Reports</h2><p>Consolidated outcomes of the awareness drive.</p></div>
+      <div class="report-actions">
+        <button class="btn btn-primary btn-sm" id="downloadPdfBtn">⬇ Download PDF</button>
+        <button class="btn btn-ghost btn-sm" id="printBtn">🖨 Print Report</button>
+        <button class="btn btn-outline btn-sm" id="exportExcelBtn">📊 Export Excel</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="label">Programs Conducted</div><div class="num" id="rp-programs">–</div></div>
+        <div class="stat-card"><div class="label">Total Participants</div><div class="num" id="rp-participants">–</div></div>
+        <div class="stat-card"><div class="label">Volunteers</div><div class="num" id="rp-volunteers">–</div></div>
+        <div class="stat-card"><div class="label">Male / Female Ratio</div><div class="num" id="rp-ratio">–</div></div>
+        <div class="stat-card"><div class="label">Feedback Rating</div><div class="num" id="rp-feedback">–</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h4>Participants by Program</h4><canvas id="chartReportBar"></canvas></div>
+        <div class="chart-card"><h4>Male / Female Participants</h4><canvas id="chartReportPie"></canvas></div>
+      </div>
+      <div class="chart-card" style="margin-top:20px;"><h4>Before &amp; After Awareness Comparison</h4><canvas id="chartReportLine"></canvas></div>
+    </section>
+  </main>
+  <footer class="appfoot">Junk Food Awareness Management System · PHP + MySQL on XAMPP</footer>
+</div>
+
+<div class="modal-overlay" id="programModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="program-img" id="modalImg"></div>
+    <h3 id="modalTitle"></h3>
+    <p class="desc" id="modalDesc" style="margin-top:8px;"></p>
+    <div class="program-meta" id="modalMeta" style="margin-top:14px;"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'api/';
+let currentUser = null;
+let reportRows = [];
+
+async function api(path, method = 'GET', data = null) {
+  const opts = { method, credentials: 'same-origin', headers: {} };
+  if (data) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(data); }
+  let res;
+  try { res = await fetch(API + path, opts); }
+  catch (e) { throw new Error('Cannot reach the server. Is Apache running in XAMPP?'); }
+  let json = {};
+  try { json = await res.json(); } catch (e) { throw new Error('Server returned an invalid response (check PHP errors).'); }
+  if (res.status === 401 && path !== 'login.php' && path !== 'session.php') { showLogin(); throw new Error('Session expired — please log in again.'); }
+  if (!res.ok) throw new Error(json.error || 'Request failed');
+  return json;
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => { const [y,m,dd] = d.split('-'); return new Date(+y, +m-1, +dd).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}); };
+let toastTimer;
+function toast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast' + (isError ? ' error' : ''); t.style.display = 'block';
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.style.display = 'none', 3200);
+}
+
+const charts = {};
+function drawChart(id, config, tries = 0) {
+  if (typeof Chart === 'undefined') {
+    if (tries > 15) { const c = document.getElementById(id); if (c) c.replaceWith(Object.assign(document.createElement('p'), {textContent:'Chart library could not load (check internet connection).', style:'font-size:.82rem;color:#8a9a84;'})); return; }
+    return setTimeout(() => drawChart(id, config, tries + 1), 300);
+  }
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), config);
+}
+const G = '#4CAF50', O = '#FF9800', R = '#E15B41', D = '#2E6B31';
+
+const loginScreen = document.getElementById('loginScreen');
+const appScreen = document.getElementById('appScreen');
+const loginError = document.getElementById('loginError');
+
+function showLogin() { appScreen.style.display = 'none'; loginScreen.style.display = 'flex'; currentUser = null; }
+function enterApp(user) {
+  currentUser = user;
+  loginScreen.style.display = 'none'; appScreen.style.display = 'block';
+  document.getElementById('welcomeMsg').textContent = 'Welcome, ' + user.name;
+  document.getElementById('avatarInitial').textContent = user.name.charAt(0).toUpperCase();
+  const admin = user.role === 'admin';
+  document.getElementById('addActivityForm').style.display = admin ? 'grid' : 'none';
+  document.querySelectorAll('.admin-col').forEach(el => el.style.display = admin ? '' : 'none');
+  goTo('dashboard');
+}
+
+async function attemptLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) { loginError.textContent = 'Please enter both username and password.'; loginError.style.display = 'block'; return; }
+  try {
+    const r = await api('login.php', 'POST', { username, password });
+    loginError.style.display = 'none';
+    document.getElementById('password').value = '';
+    enterApp(r.user);
+  } catch (e) { loginError.textContent = e.message; loginError.style.display = 'block'; }
+}
+document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+['username','password'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); }));
+document.getElementById('forgotBtn').addEventListener('click', () => { document.getElementById('loginHint').textContent = 'Contact your CSP coordinator / admin to reset your password.'; });
+document.getElementById('logoutBtn').addEventListener('click', async () => { try { await api('logout.php'); } catch(e) {} showLogin(); });
+
+api('session.php').then(r => enterApp(r.user)).catch(() => {});
+
+const navItems = document.querySelectorAll('.nav-item');
+function goTo(page) {
+  navItems.forEach(b => b.classList.toggle('active', b.dataset.page === page));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+  document.getElementById('sidebar').classList.remove('open');
+  ({ dashboard: loadDashboard, profile: loadProfile, activities: loadActivities, programs: loadPrograms, reports: loadReports })[page]();
+}
+navItems.forEach(btn => btn.addEventListener('click', () => goTo(btn.dataset.page)));
+document.getElementById('menuToggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
+
+async function loadDashboard() {
+  try {
+    const d = await api('dashboard.php');
+    document.getElementById('st-programs').textContent = d.programs;
+    document.getElementById('st-volunteers').textContent = d.volunteers.toLocaleString();
+    document.getElementById('st-participants').textContent = d.participants.toLocaleString();
+    document.getElementById('st-locations').textContent = d.locations;
+    document.getElementById('st-awareness').textContent = d.awareness + '%';
+    document.getElementById('recentList').innerHTML = d.recent.length
+      ? d.recent.map(a => `<div class="recent-row"><span>${esc(a.activity_name)} — ${esc(a.location)}</span><span class="badge ${a.status.toLowerCase()}">${esc(a.status)}</span></div>`).join('')
+      : '<div class="empty">No activities yet.</div>';
+    drawChart('chartPie', { type:'pie', data:{ labels:['Choose Healthy Food','Still Prefer Junk Food'], datasets:[{ data:[d.healthy_pct, d.junk_pct], backgroundColor:[G, O] }] }, options:{ plugins:{ legend:{ position:'bottom' } } } });
+    drawChart('chartBar', { type:'bar', data:{ labels:d.by_program.map(p => p.title), datasets:[{ label:'Participants', data:d.by_program.map(p => +p.participants), backgroundColor:O }] }, options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
+  } catch (e) { toast(e.message, true); }
+}
+
+const pfFields = ['name','roll_no','branch','college','phone','email','batch'];
+let editing = false;
+async function loadProfile() {
+  try {
+    const { profile } = await api('profile.php');
+    pfFields.forEach(f => document.getElementById('pf-' + f).value = profile[f] ?? '');
+    document.getElementById('profileInitial').textContent = (profile.name || '?').charAt(0).toUpperCase();
+  } catch (e) { toast(e.message, true); }
+}
+document.getElementById('editProfileBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('editProfileBtn');
+  if (!editing) {
+    editing = true; btn.textContent = 'Save Profile';
+    pfFields.forEach(f => document.getElementById('pf-' + f).disabled = false);
+    return;
+  }
+  const data = {}; pfFields.forEach(f => data[f] = document.getElementById('pf-' + f).value);
+  try {
+    const r = await api('profile.php', 'POST', data);
+    editing = false; btn.textContent = 'Edit Profile';
+    pfFields.forEach(f => document.getElementById('pf-' + f).disabled = true);
+    document.getElementById('welcomeMsg').textContent = 'Welcome, ' + r.name;
+    document.getElementById('avatarInitial').textContent = r.name.charAt(0).toUpperCase();
+    document.getElementById('profileInitial').textContent = r.name.charAt(0).toUpperCase();
+    toast('Profile saved');
+  } catch (e) { toast(e.message, true); }
+});
+
+let activityFilter = 'all';
+async function loadActivities() {
+  try {
+    const { activities } = await api('activities.php');
+    const admin = currentUser.role === 'admin';
+    const body = document.getElementById('activityTable');
+    body.innerHTML = activities.length ? activities.map(a => {
+      const st = a.status.toLowerCase();
+      const next = st === 'completed' ? 'Pending' : 'Completed';
+      return `<tr data-status="${st}"><td>${fmtDate(a.activity_date)}</td><td>${esc(a.activity_name)}</td><td>${esc(a.location)}</td>
+        <td><span class="badge ${st}">${esc(a.status)}</span></td>
+        ${admin ? `<td><button class="row-btn" data-act="toggle" data-id="${a.activity_id}" data-next="${next}">Mark ${next}</button><button class="row-btn del" data-act="delete" data-id="${a.activity_id}">Delete</button></td>` : ''}</tr>`;
+    }).join('') : '<tr><td colspan="5" class="empty">No activities yet.</td></tr>';
+    applyFilter();
+  } catch (e) { toast(e.message, true); }
+}
+function applyFilter() {
+  document.querySelectorAll('#activityTable tr[data-status]').forEach(r => r.style.display = (activityFilter === 'all' || r.dataset.status === activityFilter) ? '' : 'none');
+}
+document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); activityFilter = btn.dataset.filter; applyFilter();
+}));
+document.getElementById('activityTable').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  try {
+    if (b.dataset.act === 'toggle') await api('activities.php', 'PUT', { activity_id: +b.dataset.id, status: b.dataset.next });
+    if (b.dataset.act === 'delete') { if (!confirm('Delete this activity?')) return; await api('activities.php', 'DELETE', { activity_id: +b.dataset.id }); }
+    loadActivities();
+  } catch (err) { toast(err.message, true); }
+});
+document.getElementById('addActivityBtn').addEventListener('click', async () => {
+  const payload = { activity_name: document.getElementById('act-name').value, location: document.getElementById('act-location').value, activity_date: document.getElementById('act-date').value };
+  try {
+    await api('activities.php', 'POST', payload);
+    ['act-name','act-location','act-date'].forEach(id => document.getElementById(id).value = '');
+    toast('Activity added'); loadActivities();
+  } catch (e) { toast(e.message, true); }
+});
+
+let programs = [];
+const bg = ['#EAF6E7','#FFF1DC'];
+async function loadPrograms() {
+  try {
+    ({ programs } = await api('programs.php'));
+    document.getElementById('programGrid').innerHTML = programs.map((p, i) => `
+      <div class="program-card">
+        <div class="program-img" style="background:${bg[i % 2]}">${esc(p.icon)}</div>
+        <div class="program-body">
+          <h4>${esc(p.title)}</h4><div class="desc">${esc(p.tagline)}</div>
+          <div class="program-meta"><span>📅 ${fmtDate(p.date)}</span><span>📍 ${esc(p.location)}</span><span>👥 ${(+p.participants).toLocaleString()}</span></div>
+          <button class="btn btn-outline btn-sm" data-idx="${i}">View Details</button>
+        </div>
+      </div>`).join('');
+  } catch (e) { toast(e.message, true); }
+}
+const modal = document.getElementById('programModal');
+document.getElementById('programGrid').addEventListener('click', e => {
+  const b = e.target.closest('button[data-idx]'); if (!b) return;
+  const p = programs[+b.dataset.idx];
+  const img = document.getElementById('modalImg'); img.style.background = bg[+b.dataset.idx % 2]; img.textContent = p.icon;
+  document.getElementById('modalTitle').textContent = p.title;
+  document.getElementById('modalDesc').textContent = p.description;
+  document.getElementById('modalMeta').innerHTML = `<span>📅 ${fmtDate(p.date)}</span><span>📍 ${esc(p.location)}</span><span>👥 ${(+p.participants).toLocaleString()} participants</span>`;
+  modal.classList.add('open');
+});
+document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('open'));
+modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+async function loadReports() {
+  try {
+    const { summary: s, rows } = await api('reports.php');
+    reportRows = rows;
+    document.getElementById('rp-programs').textContent = s.programs;
+    document.getElementById('rp-participants').textContent = (+s.participants).toLocaleString();
+    document.getElementById('rp-volunteers').textContent = s.volunteers;
+    const tot = (+s.male) + (+s.female) || 1;
+    document.getElementById('rp-ratio').textContent = Math.round(s.male / tot * 100) + ':' + Math.round(s.female / tot * 100);
+    document.getElementById('rp-feedback').textContent = s.feedback + ' / 5';
+    const labels = rows.map(r => r.title);
+    drawChart('chartReportBar', { type:'bar', data:{ labels, datasets:[{ label:'Participants', data:rows.map(r => +r.participants), backgroundColor:G }] }, options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
+    drawChart('chartReportPie', { type:'pie', data:{ labels:['Male','Female'], datasets:[{ data:[+s.male, +s.female], backgroundColor:[D, O] }] }, options:{ plugins:{ legend:{ position:'bottom' } } } });
+    drawChart('chartReportLine', { type:'line', data:{ labels, datasets:[
+      { label:'Before Awareness (%)', data:rows.map(r => +r.before_score), borderColor:R, backgroundColor:R, tension:.35 },
+      { label:'After Awareness (%)', data:rows.map(r => +r.after_score), borderColor:G, backgroundColor:G, tension:.35 } ] },
+      options:{ plugins:{ legend:{ position:'bottom' } }, scales:{ y:{ beginAtZero:true, max:100 } } } });
+  } catch (e) { toast(e.message, true); }
+}
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('downloadPdfBtn').addEventListener('click', () => { toast('Choose "Save as PDF" in the print dialog'); setTimeout(() => window.print(), 600); });
+document.getElementById('exportExcelBtn').addEventListener('click', () => {
+  if (typeof XLSX === 'undefined') return toast('Excel library could not load (check internet connection)', true);
+  if (!reportRows.length) return toast('No report data to export', true);
+  const data = [['Program','Date','Location','Participants','Volunteers','Male','Female','Feedback','Before %','After %'],
+    ...reportRows.map(r => [r.title, r.date, r.location, +r.participants, +r.volunteers, +r.male_count, +r.female_count, +r.feedback, +r.before_score, +r.after_score])];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), 'Report');
+  XLSX.writeFile(wb, 'Junk_Food_Awareness_Report.xlsx');
+});
+</script>
+</body>
+</html>
